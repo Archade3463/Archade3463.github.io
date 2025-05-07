@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Giriş Ekranı</title>
+  <style>
+    body { font-family: Arial; text-align: center; margin-top: 80px; background-color: #1e1e1e; color: white; }
+    input, button { padding: 10px; margin: 10px; border: none; border-radius: 5px; }
+    input { width: 220px; }
+    button { background-color: #4caf50; color: white; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h2>🔐 Giriş Yap</h2>
+  <input type="text" id="kullanici" placeholder="Kullanıcı Adı"><br>
+  <input type="password" id="sifre" placeholder="Şifre"><br>
+  <label>Profil Fotoğrafı:</label>
+  <input type="file" accept="image/*" id="profilFoto"><br>
+  <button onclick="girisYap()">Giriş</button>
+  <p id="uyari" style="color: red;"></p>
+
+  <h3>Yeni Hesap Oluştur</h3>
+  <input type="text" id="yeniKullanici" placeholder="Yeni Kullanıcı Adı"><br>
+  <input type="password" id="yeniSifre" placeholder="Yeni Şifre"><br>
+  <button onclick="hesapOlustur()">Hesap Oluştur</button>
+
+  <script>
+    // Kullanıcıları saklamak için localStorage'ı kontrol et
+    function getKullanicilar() {
+      return JSON.parse(localStorage.getItem("kullanicilar")) || [];
+    }
+
+    function saveKullanicilar(kullanicilar) {
+      localStorage.setItem("kullanicilar", JSON.stringify(kullanicilar));
+    }
+
+    function girisYap() {
+      const kullanici = document.getElementById("kullanici").value.trim();
+      const sifre = document.getElementById("sifre").value;
+      const dosya = document.getElementById("profilFoto").files[0];
+
+      const kullanicilar = getKullanicilar();
+      const mevcutKullanici = kullanicilar.find(user => user.kullaniciAdi === kullanici && user.sifre === sifre);
+
+      if (mevcutKullanici) {
+        if (dosya) {
+          const okuyucu = new FileReader();
+          okuyucu.onload = function(e) {
+            localStorage.setItem("profilResmi", e.target.result);
+            devamEt();
+          };
+          okuyucu.readAsDataURL(dosya);
+        } else {
+          localStorage.removeItem("profilResmi");
+          devamEt();
+        }
+      } else {
+        document.getElementById("uyari").innerText = "Kullanıcı adı veya şifre hatalı.";
+      }
+
+      function devamEt() {
+        localStorage.setItem("girisYapildi", "evet");
+        localStorage.setItem("kullaniciAdi", kullanici);
+        localStorage.setItem("tema", "dark");
+        localStorage.setItem("dil", "tr");
+        window.location.href = "fotograf.html"; // Başka sayfaya yönlendir
+      }
+    }
+
+    // Yeni kullanıcı oluşturma
+    function hesapOlustur() {
+      const yeniKullanici = document.getElementById("yeniKullanici").value.trim();
+      const yeniSifre = document.getElementById("yeniSifre").value;
+
+      if (!yeniKullanici || !yeniSifre) {
+        alert("Kullanıcı adı ve şifre zorunludur!");
+        return;
+      }
+
+      const kullanicilar = getKullanicilar();
+
+      // Aynı kullanıcı adı daha önce alınmış mı?
+      const mevcutKullanici = kullanicilar.find(user => user.kullaniciAdi === yeniKullanici);
+
+      if (mevcutKullanici) {
+        alert("Bu kullanıcı adı zaten alınmış!");
+      } else {
+        const yeniHesap = {
+          kullaniciAdi: yeniKullanici,
+          sifre: yeniSifre
+        };
+
+        kullanicilar.push(yeniHesap);
+        saveKullanicilar(kullanicilar);
+        alert("Hesap başarıyla oluşturuldu!");
+      }
+    }
+  </script>
+</body>
+</html>
